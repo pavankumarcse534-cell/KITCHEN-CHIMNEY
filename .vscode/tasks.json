@@ -1,0 +1,84 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Convert GLB to Readable Format",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/backend/scripts/glb_to_readable.py",
+        "${file}"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Convert GLB to Readable Format (with output path)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/backend/scripts/glb_to_readable.py",
+        "${file}",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}.gltf"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": false,
+        "clear": true
+      }
+    },
+    {
+      "label": "Show GLB File Information",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/backend/scripts/glb_to_readable.py",
+        "${file}",
+        "-i"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": false,
+        "clear": true
+      }
+    },
+    {
+      "label": "Open GLB in 3D Viewer",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/open-glb-viewer.ps1",
+        "${file}"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "group": {
+        "kind": "none",
+        "isDefault": false
+      }
+    }
+  ]
+}
+

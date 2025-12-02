@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "ms-vscode.hexeditor",
+    "cesium.gltf-vscode"
+  ],
+  "unwantedRecommendations": []
+}
+

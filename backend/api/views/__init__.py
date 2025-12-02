@@ -1,0 +1,48 @@
+# Views package
+from . import frontend_views, media_views
+from .main_views import (
+    CategoryViewSet,
+    ChimneyDesignViewSet,
+    UserProjectViewSet,
+    OrderViewSet,
+    ContactMessageViewSet,
+    register,
+    login,
+    logout,
+    profile,
+    stats,
+    health_check,
+    upload_glb,
+    upload_image,
+    upload_3d_object,
+    get_model_by_type,
+    get_all_model_types,
+    list_all_models,
+    delete_model_by_type,
+    convert_glb_to_dwg_view,
+)
+
+__all__ = [
+    'frontend_views',
+    'media_views',
+    'CategoryViewSet',
+    'ChimneyDesignViewSet',
+    'UserProjectViewSet',
+    'OrderViewSet',
+    'ContactMessageViewSet',
+    'register',
+    'login',
+    'logout',
+    'profile',
+    'stats',
+    'health_check',
+    'upload_glb',
+    'upload_image',
+    'upload_3d_object',
+    'get_model_by_type',
+    'get_all_model_types',
+    'list_all_models',
+    'delete_model_by_type',
+    'convert_glb_to_dwg_view',
+]
+

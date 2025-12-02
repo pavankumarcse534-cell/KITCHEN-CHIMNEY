@@ -1,0 +1,15 @@
+{
+  "name": "Front End-chimney project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cd chimney-craft-3d-main && npm run dev",
+    "start:backend": "cd backend && call venv\\Scripts\\activate.bat && python manage.py runserver",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.21.0"
+}

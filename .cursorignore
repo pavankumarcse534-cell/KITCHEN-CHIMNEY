@@ -1,0 +1,60 @@
+# GLB files are binary - don't try to open them as text
+# These are 3D model files, not text files
+*.glb
+*.GLB
+*.gltf
+*.GLTF
+*.stp
+*.STP
+*.step
+*.STEP
+*.dwg
+*.DWG
+*.stl
+*.STL
+*.obj
+*.OBJ
+*.fbx
+*.FBX
+*.3ds
+*.3DS
+
+# Media files
+media/
+backend/media/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+
+# Build outputs
+dist/
+build/
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.venv
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+

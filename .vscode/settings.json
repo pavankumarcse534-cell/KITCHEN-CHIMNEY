@@ -1,0 +1,40 @@
+{
+  // File associations for GLB and glTF files
+  "files.associations": {
+    "*.gltf": "json"
+  },
+  
+  // Encoding settings
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": true,
+  
+  // GLB files are binary 3D model files - use glb-viewer.html to view them
+  // Right-click a GLB file and select "Open with..." or use open-glb-viewer.ps1 script
+  "files.binaryFilePatterns": [
+    "*.glb"
+  ],
+  
+  // Prevent binary file warnings for GLB files
+  "files.exclude": {},
+  
+  // Editor settings for glTF JSON files
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+  
+  // Settings for viewing binary files (if using hex editor)
+  "hexEditor.inspectorType": "number",
+  "hexEditor.dataInspector": true,
+  
+  // File watcher settings
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/venv/**": true,
+    "**/backend/venv/**": true
+  }
+}
+

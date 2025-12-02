@@ -1,0 +1,9 @@
+[
+    {
+        "key": "ctrl+alt+g",
+        "command": "workbench.action.tasks.runTask",
+        "args": "Open GLB in 3D Viewer",
+        "when": "resourceExtname == '.glb' || resourceExtname == '.gltf'"
+    }
+]
+

@@ -1,0 +1,68 @@
+========================================
+QUICK START - Django Server
+========================================
+
+TO START THE SERVER (Choose one method):
+
+Method 1: Double-Click (Easiest)
+  → Double-click: start-server-permanent.bat
+  → Keep the window open
+  → Server runs on: http://localhost:8000
+
+Method 2: Background (No Window)
+  → Open PowerShell
+  → Run: .\start-server-background.ps1
+  → To stop: .\stop-server.ps1
+
+Method 3: Auto-Start on Boot (Permanent)
+  → Right-click PowerShell → Run as Administrator
+  → Run: .\setup-auto-start.ps1
+  → Server starts automatically on Windows boot
+
+========================================
+VERIFY SERVER IS RUNNING:
+========================================
+
+1. Open browser: http://localhost:8000/api/health/
+   Should see: {"status":"ok","server":"Django REST API","version":"1.0.0"}
+
+2. Or run: check-server.bat
+
+========================================
+SERVER ENDPOINTS:
+========================================
+
+- Health: http://localhost:8000/api/health/
+- GLB Upload: http://localhost:8000/api/upload-glb/
+- Admin: http://localhost:8000/admin/
+- API Base: http://localhost:8000/api/
+
+========================================
+IF SERVER WON'T START:
+========================================
+
+1. Kill existing processes:
+   netstat -ano | findstr :8000
+   taskkill /PID <PID> /F
+
+2. Check dependencies:
+   cd backend
+   pip install -r requirements.txt
+
+3. Check for errors:
+   cd backend
+   python manage.py check
+
+========================================
+For detailed help, see: PERMANENT_SERVER_SOLUTION.md
+========================================
+
+
+
+
+
+
+
+
+
+

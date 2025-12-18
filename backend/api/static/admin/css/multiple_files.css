@@ -1,0 +1,35 @@
+/* Custom CSS for multiple file input */
+.multiple-file-input {
+    padding: 8px;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    width: 100%;
+}
+
+.multiple-file-input:hover {
+    border-color: #007bff;
+    background-color: #f0f7ff;
+}
+
+.multiple-file-input::file-selector-button {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.multiple-file-input::file-selector-button:hover {
+    background-color: #0056b3;
+}
+
+/* Change button text */
+.multiple-file-input::file-selector-button::after {
+    content: "Choose Files";
+}
+

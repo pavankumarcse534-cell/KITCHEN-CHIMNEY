@@ -9,6 +9,10 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from api.views import frontend_views, media_views
 
+# Import custom admin configuration to set backend branding
+# This ensures backend admin shows Cursor AI branding, not frontend Lovable branding
+import api.admin_config
+
 urlpatterns = [
     # Standard Django admin with username/password login and password change
     path('admin/', admin.site.urls),
@@ -31,9 +35,9 @@ if settings.DEBUG:
 # Serve frontend - catch all routes except api/, admin/, static/, media/
 # This regex matches any path that doesn't start with api/, admin/, static/, or media/
 # IMPORTANT: This must be LAST so it doesn't interfere with static/media files
-# Updated regex to exclude both 'admin' and 'admin/' (with and without trailing slash)
-# The pattern (?!api/|admin|static/|media/) excludes paths starting with these prefixes
+# Updated regex to properly exclude admin routes with trailing slash
+# The pattern (?!api/|admin/|static/|media/) excludes paths starting with these prefixes
 urlpatterns += [
-    re_path(r'^(?!api/|admin|static/|media/).*', frontend_views.serve_frontend, name='frontend'),
+    re_path(r'^(?!api/|admin/|static/|media/).*', frontend_views.serve_frontend, name='frontend'),
 ]
 

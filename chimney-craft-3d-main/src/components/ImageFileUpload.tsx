@@ -53,17 +53,25 @@ export const ImageFileUpload = ({ modelType, onFileUploaded, currentFileName, cu
     await uploadFile(file);
   };
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = async (file: File, retryCount = 0) => {
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
       const url = `${API_BASE_URL}/api/upload-image/`;
       
+      console.log('Uploading preview image:', {
+        fileName: file.name,
+        fileSize: file.size,
+        modelType: modelType,
+        url: url
+      });
+      
       // Create FormData
       const formData = new FormData();
       formData.append('file', file);
       formData.append('model_type', modelType || '');
+      formData.append('is_thumbnail', 'true'); // Mark as thumbnail/preview for model type
 
       // Create XMLHttpRequest for progress tracking
       const xhr = new XMLHttpRequest();
@@ -79,19 +87,30 @@ export const ImageFileUpload = ({ modelType, onFileUploaded, currentFileName, cu
       // Handle response
       const response = await new Promise<any>((resolve, reject) => {
         xhr.addEventListener('load', () => {
+          // Backend returns 201 CREATED for successful uploads
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
               const data = JSON.parse(xhr.responseText);
+              console.log('Image upload response:', data);
               resolve(data);
             } catch (e) {
+              console.error('Error parsing response:', e, xhr.responseText);
               reject(new Error('Invalid response from server'));
             }
           } else {
             let errorMsg = `Upload failed with status ${xhr.status}`;
+            console.error('Upload failed:', {
+              status: xhr.status,
+              statusText: xhr.statusText,
+              responseText: xhr.responseText,
+              headers: xhr.getAllResponseHeaders()
+            });
             try {
               const errorData = JSON.parse(xhr.responseText);
-              errorMsg = errorData.error || errorMsg;
+              errorMsg = errorData.error || errorData.message || errorMsg;
+              console.error('Parsed error data:', errorData);
             } catch (e) {
+              console.error('Failed to parse error response as JSON:', e);
               errorMsg = xhr.statusText || errorMsg;
             }
             reject(new Error(errorMsg));
@@ -99,7 +118,16 @@ export const ImageFileUpload = ({ modelType, onFileUploaded, currentFileName, cu
         });
 
         xhr.addEventListener('error', () => {
-          reject(new Error('Network error: Failed to upload file'));
+          console.error('XHR error event fired', {
+            status: xhr.status,
+            statusText: xhr.statusText,
+            responseText: xhr.responseText,
+            readyState: xhr.readyState
+          });
+          const errorMsg = xhr.status === 0 
+            ? 'Network error: Cannot connect to backend server'
+            : `Network error: Failed to upload file (Status: ${xhr.status})`;
+          reject(new Error(errorMsg));
         });
 
         xhr.addEventListener('abort', () => {
@@ -139,23 +167,59 @@ export const ImageFileUpload = ({ modelType, onFileUploaded, currentFileName, cu
           }
         }
         
-        console.log('✅ Image URL from backend:', absoluteUrl);
-        console.log('✅ Image filename:', fileName);
+        console.log('✅ Preview image URL from backend:', absoluteUrl);
+        console.log('✅ Preview image filename:', fileName);
+        console.log('✅ Model type:', modelType);
         console.log('Calling onFileUploaded with:', { fileUrl: absoluteUrl, fileName });
+        
+        // Call callback to update parent component
         onFileUploaded(absoluteUrl, fileName);
         
-        toast.success(`Image uploaded successfully for ${modelType}!`);
+        toast.success(`Preview image uploaded successfully for ${modelType}!`, {
+          description: 'The preview will appear in the model type gallery shortly.',
+          duration: 4000
+        });
       } else {
         throw new Error(response.error || 'Upload failed: Invalid response - no image URL returned');
       }
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      let errorMsg = 'Failed to upload image.';
+      
+      // Retry logic for network errors
+      const isNetworkError = error.message?.includes('Network error') || 
+                            error.message?.includes('Cannot connect') ||
+                            error.message?.includes('Failed to fetch') ||
+                            error.message?.includes('ERR_CONNECTION_REFUSED') ||
+                            error.message?.includes('ERR_NETWORK');
+      
+      if (isNetworkError && retryCount < 3) {
+        const retryDelay = (retryCount + 1) * 2000;
+        console.log(`Retrying preview upload (attempt ${retryCount + 1}/3) in ${retryDelay}ms...`);
+        toast.info(`Backend not responding. Retrying preview upload... (${retryCount + 1}/3)`, { duration: 3000 });
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        return uploadFile(file, retryCount + 1);
+      }
+      
+      let errorMsg = 'Failed to upload preview image.';
       
       if (error.message?.includes('timeout')) {
         errorMsg = 'Upload timeout: File upload took too long. Please try again or use a smaller file.';
-      } else if (error.message?.includes('Network error') || error.message?.includes('Failed to fetch')) {
-        errorMsg = `Network error: Cannot connect to backend at ${API_BASE_URL}. Please ensure backend server is running and CORS is configured.`;
+      } else if (isNetworkError) {
+        errorMsg = `Backend server not responding at ${API_BASE_URL}.\n\nPlease ensure:\n1. Backend server is running\n2. Port 8000 is accessible\n3. Server is not blocked`;
+        toast.error(
+          'Backend server not responding',
+          {
+            duration: 10000,
+            description: errorMsg,
+            action: {
+              label: 'Check Backend',
+              onClick: () => {
+                window.open(`${API_BASE_URL}/api/health/`, '_blank');
+              }
+            }
+          }
+        );
+        return; // Don't show duplicate error
       } else if (error.message?.includes('CORS') || error.message?.includes('Cross-Origin')) {
         errorMsg = 'CORS error: Backend may not allow requests from this origin. Please check CORS settings.';
       } else if (error.message) {

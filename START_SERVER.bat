@@ -1,21 +1,76 @@
 @echo off
 echo ========================================
-echo STARTING BACKEND SERVER
+echo STARTING BACKEND AND FRONTEND SERVERS
 echo ========================================
 echo.
-echo This will start the Django backend server
-echo Server will be available at: http://localhost:8000
+
+REM Get the script directory
+set "SCRIPT_DIR=%~dp0"
+set "BACKEND_DIR=%SCRIPT_DIR%backend"
+set "FRONTEND_DIR=%SCRIPT_DIR%chimney-craft-3d-main"
+
+echo [1/2] Starting Backend Server...
+cd /d "%BACKEND_DIR%"
+
+REM Check if port 8000 is in use
+netstat -ano | findstr ":8000" >nul 2>&1
+if not errorlevel 1 (
+    echo WARNING: Port 8000 is already in use!
+    echo Trying to free the port...
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000" ^| findstr "LISTENING"') do (
+        taskkill /PID %%a /F >nul 2>&1
+    )
+    timeout /t 2 /nobreak >nul
+)
+
+REM Check if virtual environment exists and activate it
+if exist "venv\Scripts\activate.bat" (
+    echo Activating virtual environment...
+    start "Backend Server - Port 8000" cmd /k "cd /d %BACKEND_DIR% && call venv\Scripts\activate.bat && echo ======================================== && echo BACKEND SERVER STARTING && echo ======================================== && echo Backend: http://localhost:8000 && echo Health: http://localhost:8000/api/health/ && echo. && python manage.py runserver 0.0.0.0:8000"
+) else (
+    echo WARNING: Virtual environment not found, using system Python
+    start "Backend Server - Port 8000" cmd /k "cd /d %BACKEND_DIR% && echo ======================================== && echo BACKEND SERVER STARTING && echo ======================================== && echo Backend: http://localhost:8000 && echo Health: http://localhost:8000/api/health/ && echo. && python manage.py runserver 0.0.0.0:8000"
+)
+
+echo Backend server starting in new window...
+timeout /t 3 /nobreak >nul
+
+echo [2/2] Starting Frontend Server...
+cd /d "%FRONTEND_DIR%"
+
+REM Check if port 5173 is in use
+netstat -ano | findstr ":5173" >nul 2>&1
+if not errorlevel 1 (
+    echo WARNING: Port 5173 is already in use!
+    echo Vite will use the next available port...
+)
+
+REM Check if node_modules exists
+if not exist "node_modules" (
+    echo Installing dependencies...
+    call npm install
+    if errorlevel 1 (
+        echo ERROR: Failed to install dependencies
+        pause
+        exit /b 1
+    )
+)
+
+start "Frontend Server" cmd /k "cd /d %FRONTEND_DIR% && echo ======================================== && echo FRONTEND SERVER STARTING && echo ======================================== && echo Frontend: http://localhost:5173 && echo. && npm run dev"
+
 echo.
-echo Press CTRL+C to stop the server
+echo ========================================
+echo SERVERS STARTING...
+echo ========================================
 echo.
-pause
-
-cd /d "%~dp0\backend"
-
-echo Starting server...
-python manage.py runserver
-
-pause
+echo Backend:  http://localhost:8000
+echo Frontend: http://localhost:5173 (or check terminal)
+echo.
+echo Both servers are starting in separate windows.
+echo You can close this window - servers will continue running.
+echo.
+echo Press any key to exit this window...
+pause >nul
 
 
 

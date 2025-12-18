@@ -55,6 +55,8 @@ export const ModelImageUpload = ({ images, onImagesChange }: ModelImageUploadPro
 
     const formData = new FormData();
     formData.append('file', file);
+    // Note: ModelImageUpload doesn't require model_type as it's for general images
+    // If you need to associate with model type, add: formData.append('model_type', modelType);
 
     try {
       const xhr = new XMLHttpRequest();
@@ -68,18 +70,28 @@ export const ModelImageUpload = ({ images, onImagesChange }: ModelImageUploadPro
       });
 
       xhr.addEventListener('load', () => {
-        if (xhr.status === 200) {
+        // Backend returns 201 CREATED for successful uploads
+        if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const response = JSON.parse(xhr.responseText);
-            const fileUrl = response.image_file_url;
-            const absoluteUrl = fileUrl.startsWith('http') 
+            console.log('Image upload response:', response);
+            
+            // Backend returns: url, image_file_url, thumbnail_url, file_path
+            const fileUrl = response.url || response.image_file_url || response.thumbnail_url;
+            const absoluteUrl = fileUrl && fileUrl.startsWith('http') 
               ? fileUrl 
-              : `${API_BASE_URL}${fileUrl}`;
+              : fileUrl
+                ? (fileUrl.startsWith('/') ? `${API_BASE_URL}${fileUrl}` : `${API_BASE_URL}/${fileUrl}`)
+                : null;
+
+            if (!absoluteUrl) {
+              throw new Error('No file URL in response');
+            }
 
             const newImage: ModelImage = {
               id: imageId,
               url: absoluteUrl,
-              filename: response.image_file
+              filename: response.file_path?.split('/').pop() || file.name
             };
 
             onImagesChange([...images, newImage]);
@@ -126,7 +138,19 @@ export const ModelImageUpload = ({ images, onImagesChange }: ModelImageUploadPro
             : typeof window !== 'undefined' 
               ? `http://${window.location.hostname}:8000`
               : 'http://localhost:8000');
-        toast.error(`Network error: Cannot connect to backend at ${apiUrl}. Please ensure backend server is running.`);
+        toast.error(
+          'Backend server not responding',
+          {
+            duration: 8000,
+            description: `Cannot connect to backend at ${apiUrl}.\n\nPlease ensure:\n1. Backend server is running\n2. Port 8000 is accessible\n3. Server is not blocked`,
+            action: {
+              label: 'Check Backend',
+              onClick: () => {
+                window.open(`${apiUrl}/api/health/`, '_blank');
+              }
+            }
+          }
+        );
         setIsUploading(false);
         setUploadProgress(prev => {
           const updated = { ...prev };

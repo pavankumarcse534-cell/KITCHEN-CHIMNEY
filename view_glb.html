@@ -3,339 +3,1037 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GLB File Viewer</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Interactive 3D Chimney Viewer - Individual Model Controls v2.0</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
+        body { margin: 0; overflow: hidden; background-color: #1a1a1a; color: white; font-family: 'Segoe UI', sans-serif; }
+        #container { position: relative; width: 100vw; height: 100vh; }
+        canvas { display: block; width: 100%; height: 100%; }
         
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #1a1a1a;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-        
-        .header {
-            background: #2a2a2a;
-            padding: 1rem;
-            border-bottom: 1px solid #3a3a3a;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .header h1 {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-        
-        .file-input-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .file-input {
-            padding: 0.5rem 1rem;
-            background: #3a3a3a;
-            border: 1px solid #4a4a4a;
-            border-radius: 4px;
-            color: #ffffff;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        
-        .file-input:hover {
-            background: #4a4a4a;
-        }
-        
-        .file-input input {
-            display: none;
-        }
-        
-        .viewer-container {
-            flex: 1;
-            position: relative;
-            background: #1a1a1a;
-        }
-        
-        #glb-viewer {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .info {
+        .ui-overlay {
             position: absolute;
-            top: 1rem;
-            left: 1rem;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 1rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            max-width: 300px;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            text-align: center;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 25px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+
+        #design-title { 
+            font-size: 1.2rem; 
+            font-weight: bold;
+            color: #4a9eff; 
+            margin-bottom: 5px; 
+        }
+
+        #instruction {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            background: rgba(0,0,0,0.9);
+            padding: 20px 40px;
+            border-radius: 10px;
+            z-index: 100;
+        }
+
+        .controls-panel {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            bottom: 10px;
+            width: 320px;
+            background: rgba(0,0,0,0.9);
+            border-radius: 15px;
+            overflow-y: auto;
+            padding: 15px;
             z-index: 10;
         }
         
-        .info h3 {
-            margin-bottom: 0.5rem;
+        .controls-panel h2 {
+            margin: 0 0 15px 0;
+            color: #4a9eff;
+            font-size: 1.1rem;
+            text-align: center;
+            border-bottom: 2px solid #4a9eff;
+            padding-bottom: 10px;
+        }
+        
+        .model-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+        
+        .model-section.active {
+            border-color: #4a9eff;
+        }
+        
+        .model-header {
+            background: rgba(74, 158, 255, 0.2);
+            padding: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        
+        .model-header:hover {
+            background: rgba(74, 158, 255, 0.3);
+        }
+        
+        .model-name {
+            font-weight: bold;
+            color: #ffeb3b;
+            font-size: 0.9rem;
+        }
+        
+        .model-status {
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+        
+        .model-status.loaded {
+            color: #4ade80;
+        }
+        
+        .collapse-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+        
+        .model-section.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .model-controls {
+            padding: 15px;
+            display: block;
+        }
+        
+        .model-section.collapsed .model-controls {
+            display: none;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            color: #aaa;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .axis-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-top: 5px;
+        }
+        
+        .axis-control {
+            background: rgba(255,255,255,0.05);
+            padding: 8px;
+            border-radius: 5px;
+        }
+        
+        .axis-label {
+            font-size: 0.7rem;
+            color: #4a9eff;
+            margin-bottom: 3px;
+            text-align: center;
+        }
+        
+        .axis-value {
+            font-size: 0.75rem;
+            color: #ffeb3b;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .axis-buttons {
+            display: flex;
+            gap: 3px;
+        }
+        
+        .axis-btn {
+            flex: 1;
+            background: #4a9eff;
+            border: none;
+            color: white;
+            padding: 4px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: background 0.2s;
+        }
+        
+        .axis-btn:hover:not(:disabled) {
+            background: #357abd;
+        }
+        
+        .axis-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .slider-container {
+            margin-bottom: 8px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            margin-bottom: 3px;
+        }
+        
+        .slider-label .axis {
             color: #4a9eff;
         }
         
-        .info p {
-            margin: 0.25rem 0;
-            color: #cccccc;
+        .slider-label .value {
+            color: #ffeb3b;
         }
         
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 20;
+        .reset-btn {
+            width: 100%;
+            background: #ef4444;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            transition: background 0.2s;
         }
         
-        .loading-spinner {
-            border: 3px solid #3a3a3a;
-            border-top: 3px solid #4a9eff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
+        .reset-btn:hover:not(:disabled) {
+            background: #dc2626;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .reset-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
         }
         
-        .error {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 0, 0, 0.2);
-            border: 1px solid #ff4444;
-            padding: 1rem;
-            border-radius: 8px;
-            color: #ff8888;
-            text-align: center;
-            max-width: 400px;
+        /* Scrollbar styling */
+        .controls-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .controls-panel::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        
+        .controls-panel::-webkit-scrollbar-thumb {
+            background: #4a9eff;
+            border-radius: 10px;
+        }
+        
+        .controls-panel::-webkit-scrollbar-thumb:hover {
+            background: #357abd;
         }
     </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
 <body>
-    <div class="header">
-        <h1>🔷 GLB File Viewer</h1>
-        <div class="file-input-container">
-            <label class="file-input">
-                📁 Open GLB File
-                <input type="file" id="file-input" accept=".glb,.gltf">
-            </label>
-            <span id="file-name" style="color: #888; font-size: 0.9rem;">No file selected</span>
+    <div id="container">
+        <div class="ui-overlay">
+            <div id="design-title">Loading Design...</div>
+            <div id="instruction">Drag to rotate view • Scroll to zoom • Use controls to transform models</div>
         </div>
-    </div>
-    
-    <div class="viewer-container">
-        <div id="loading" class="loading" style="display: none;">
-            <div class="loading-spinner"></div>
-            <p>Loading 3D model...</p>
+
+        <div id="loader" class="loader">Loading 3D Models...</div>
+        
+        <div class="controls-panel" id="controls-panel" style="display: none;">
+            <h2>Model Controls</h2>
+            
+            <!-- Model 1: Front Part -->
+            <div class="model-section" id="section-front">
+                <div class="model-header" onclick="toggleSection('front')">
+                    <div>
+                        <div class="model-name">1. Front Part</div>
+                        <div class="model-status" id="status-front">Not loaded</div>
+                    </div>
+                    <div class="collapse-icon">▼</div>
+                </div>
+                <div class="model-controls" id="controls-front">
+                    <div class="control-group">
+                        <label>Rotation (10� increments)</label>
+                        <div class="axis-controls">
+                            <div class="axis-control">
+                                <div class="axis-label">X Axis</div>
+                                <div class="axis-value" id="rot-x-val-front">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('front', 'x', -10)" disabled id="rot-x-minus-front">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('front', 'x', 10)" disabled id="rot-x-plus-front">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Y Axis</div>
+                                <div class="axis-value" id="rot-y-val-front">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('front', 'y', -10)" disabled id="rot-y-minus-front">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('front', 'y', 10)" disabled id="rot-y-plus-front">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Z Axis</div>
+                                <div class="axis-value" id="rot-z-val-front">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('front', 'z', -10)" disabled id="rot-z-minus-front">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('front', 'z', 10)" disabled id="rot-z-plus-front">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Position</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="pos-x-val-front">0.00</span></div>
+                            <input type="range" id="pos-x-front" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('front', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="pos-y-val-front">0.00</span></div>
+                            <input type="range" id="pos-y-front" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('front', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="pos-z-val-front">0.00</span></div>
+                            <input type="range" id="pos-z-front" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('front', 'z', this.value)">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Scale</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="scale-x-val-front">1.00</span></div>
+                            <input type="range" id="scale-x-front" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('front', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="scale-y-val-front">1.00</span></div>
+                            <input type="range" id="scale-y-front" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('front', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="scale-z-val-front">1.00</span></div>
+                            <input type="range" id="scale-z-front" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('front', 'z', this.value)">
+                        </div>
+                    </div>
+                    
+                    <button class="reset-btn" onclick="resetModel('front')" disabled id="reset-front">Reset</button>
+                </div>
+            </div>
+            
+            <!-- Model 2: Top -->
+            <div class="model-section" id="section-top">
+                <div class="model-header" onclick="toggleSection('top')">
+                    <div>
+                        <div class="model-name">2. Top</div>
+                        <div class="model-status" id="status-top">Not loaded</div>
+                    </div>
+                    <div class="collapse-icon">▼</div>
+                </div>
+                <div class="model-controls" id="controls-top">
+                    <!-- Same structure as front, with 'top' IDs -->
+                    <div class="control-group">
+                        <label>Rotation (10� increments)</label>
+                        <div class="axis-controls">
+                            <div class="axis-control">
+                                <div class="axis-label">X Axis</div>
+                                <div class="axis-value" id="rot-x-val-top">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('top', 'x', -10)" disabled id="rot-x-minus-top">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('top', 'x', 10)" disabled id="rot-x-plus-top">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Y Axis</div>
+                                <div class="axis-value" id="rot-y-val-top">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('top', 'y', -10)" disabled id="rot-y-minus-top">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('top', 'y', 10)" disabled id="rot-y-plus-top">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Z Axis</div>
+                                <div class="axis-value" id="rot-z-val-top">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('top', 'z', -10)" disabled id="rot-z-minus-top">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('top', 'z', 10)" disabled id="rot-z-plus-top">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Position</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="pos-x-val-top">0.00</span></div>
+                            <input type="range" id="pos-x-top" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('top', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="pos-y-val-top">0.00</span></div>
+                            <input type="range" id="pos-y-top" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('top', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="pos-z-val-top">0.00</span></div>
+                            <input type="range" id="pos-z-top" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('top', 'z', this.value)">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Scale</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="scale-x-val-top">1.00</span></div>
+                            <input type="range" id="scale-x-top" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('top', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="scale-y-val-top">1.00</span></div>
+                            <input type="range" id="scale-y-top" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('top', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="scale-z-val-top">1.00</span></div>
+                            <input type="range" id="scale-z-top" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('top', 'z', this.value)">
+                        </div>
+                    </div>
+                    <button class="reset-btn" onclick="resetModel('top')" disabled id="reset-top">Reset</button>
+                </div>
+            </div>
+            
+            <!-- Model 3: Right Side -->
+            <div class="model-section" id="section-right">
+                <div class="model-header" onclick="toggleSection('right')">
+                    <div>
+                        <div class="model-name">3. Right Side Part</div>
+                        <div class="model-status" id="status-right">Not loaded</div>
+                    </div>
+                    <div class="collapse-icon">▼</div>
+                </div>
+                <div class="model-controls" id="controls-right">
+                    <div class="control-group">
+                        <label>Rotation (10� increments)</label>
+                        <div class="axis-controls">
+                            <div class="axis-control">
+                                <div class="axis-label">X Axis</div>
+                                <div class="axis-value" id="rot-x-val-right">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('right', 'x', -10)" disabled id="rot-x-minus-right">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('right', 'x', 10)" disabled id="rot-x-plus-right">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Y Axis</div>
+                                <div class="axis-value" id="rot-y-val-right">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('right', 'y', -10)" disabled id="rot-y-minus-right">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('right', 'y', 10)" disabled id="rot-y-plus-right">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Z Axis</div>
+                                <div class="axis-value" id="rot-z-val-right">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('right', 'z', -10)" disabled id="rot-z-minus-right">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('right', 'z', 10)" disabled id="rot-z-plus-right">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Position</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="pos-x-val-right">0.00</span></div>
+                            <input type="range" id="pos-x-right" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('right', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="pos-y-val-right">0.00</span></div>
+                            <input type="range" id="pos-y-right" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('right', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="pos-z-val-right">0.00</span></div>
+                            <input type="range" id="pos-z-right" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('right', 'z', this.value)">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Scale</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="scale-x-val-right">1.00</span></div>
+                            <input type="range" id="scale-x-right" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('right', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="scale-y-val-right">1.00</span></div>
+                            <input type="range" id="scale-y-right" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('right', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="scale-z-val-right">1.00</span></div>
+                            <input type="range" id="scale-z-right" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('right', 'z', this.value)">
+                        </div>
+                    </div>
+                    <button class="reset-btn" onclick="resetModel('right')" disabled id="reset-right">Reset</button>
+                </div>
+            </div>
+            
+            <!-- Model 4: Collar Hole -->
+            <div class="model-section" id="section-collar">
+                <div class="model-header" onclick="toggleSection('collar')">
+                    <div>
+                        <div class="model-name">4. Collar Hole</div>
+                        <div class="model-status" id="status-collar">Not loaded</div>
+                    </div>
+                    <div class="collapse-icon">▼</div>
+                </div>
+                <div class="model-controls" id="controls-collar">
+                    <div class="control-group">
+                        <label>Rotation (10� increments)</label>
+                        <div class="axis-controls">
+                            <div class="axis-control">
+                                <div class="axis-label">X Axis</div>
+                                <div class="axis-value" id="rot-x-val-collar">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('collar', 'x', -10)" disabled id="rot-x-minus-collar">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('collar', 'x', 10)" disabled id="rot-x-plus-collar">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Y Axis</div>
+                                <div class="axis-value" id="rot-y-val-collar">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('collar', 'y', -10)" disabled id="rot-y-minus-collar">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('collar', 'y', 10)" disabled id="rot-y-plus-collar">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Z Axis</div>
+                                <div class="axis-value" id="rot-z-val-collar">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('collar', 'z', -10)" disabled id="rot-z-minus-collar">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('collar', 'z', 10)" disabled id="rot-z-plus-collar">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Position</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="pos-x-val-collar">0.00</span></div>
+                            <input type="range" id="pos-x-collar" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('collar', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="pos-y-val-collar">0.00</span></div>
+                            <input type="range" id="pos-y-collar" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('collar', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="pos-z-val-collar">0.00</span></div>
+                            <input type="range" id="pos-z-collar" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('collar', 'z', this.value)">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Scale</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="scale-x-val-collar">1.00</span></div>
+                            <input type="range" id="scale-x-collar" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('collar', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="scale-y-val-collar">1.00</span></div>
+                            <input type="range" id="scale-y-collar" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('collar', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="scale-z-val-collar">1.00</span></div>
+                            <input type="range" id="scale-z-collar" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('collar', 'z', this.value)">
+                        </div>
+                    </div>
+                    <button class="reset-btn" onclick="resetModel('collar')" disabled id="reset-collar">Reset</button>
+                </div>
+            </div>
+            
+            <!-- Model 5: Left Side -->
+            <div class="model-section" id="section-left">
+                <div class="model-header" onclick="toggleSection('left')">
+                    <div>
+                        <div class="model-name">5. Left Side Part</div>
+                        <div class="model-status" id="status-left">Not loaded</div>
+                    </div>
+                    <div class="collapse-icon">▼</div>
+                </div>
+                <div class="model-controls" id="controls-left">
+                    <div class="control-group">
+                        <label>Rotation (10� increments)</label>
+                        <div class="axis-controls">
+                            <div class="axis-control">
+                                <div class="axis-label">X Axis</div>
+                                <div class="axis-value" id="rot-x-val-left">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('left', 'x', -10)" disabled id="rot-x-minus-left">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('left', 'x', 10)" disabled id="rot-x-plus-left">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Y Axis</div>
+                                <div class="axis-value" id="rot-y-val-left">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('left', 'y', -10)" disabled id="rot-y-minus-left">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('left', 'y', 10)" disabled id="rot-y-plus-left">+</button>
+                                </div>
+                            </div>
+                            <div class="axis-control">
+                                <div class="axis-label">Z Axis</div>
+                                <div class="axis-value" id="rot-z-val-left">0°</div>
+                                <div class="axis-buttons">
+                                    <button class="axis-btn" onclick="rotateModel('left', 'z', -10)" disabled id="rot-z-minus-left">-</button>
+                                    <button class="axis-btn" onclick="rotateModel('left', 'z', 10)" disabled id="rot-z-plus-left">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Position</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="pos-x-val-left">0.00</span></div>
+                            <input type="range" id="pos-x-left" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('left', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="pos-y-val-left">0.00</span></div>
+                            <input type="range" id="pos-y-left" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('left', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="pos-z-val-left">0.00</span></div>
+                            <input type="range" id="pos-z-left" min="-10" max="10" step="0.5" value="0" disabled oninput="updatePosition('left', 'z', this.value)">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Scale</label>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">X:</span><span class="value" id="scale-x-val-left">1.00</span></div>
+                            <input type="range" id="scale-x-left" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('left', 'x', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Y:</span><span class="value" id="scale-y-val-left">1.00</span></div>
+                            <input type="range" id="scale-y-left" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('left', 'y', this.value)">
+                        </div>
+                        <div class="slider-container">
+                            <div class="slider-label"><span class="axis">Z:</span><span class="value" id="scale-z-val-left">1.00</span></div>
+                            <input type="range" id="scale-z-left" min="0.1" max="3" step="0.1" value="1" disabled oninput="updateScale('left', 'z', this.value)">
+                        </div>
+                    </div>
+                    <button class="reset-btn" onclick="resetModel('left')" disabled id="reset-left">Reset</button>
+                </div>
+            </div>
         </div>
-        
-        <div id="error" class="error" style="display: none;"></div>
-        
-        <div id="info" class="info" style="display: none;">
-            <h3>Controls</h3>
-            <p>🖱️ Left Click + Drag: Rotate</p>
-            <p>🖱️ Right Click + Drag: Pan</p>
-            <p>🖱️ Scroll: Zoom</p>
-        </div>
-        
-        <canvas id="glb-viewer"></canvas>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
-    
-    <script>
-        let scene, camera, renderer, controls, model;
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        let camera, scene, renderer, controls;
+        let models = {
+            front: null,
+            top: null,
+            right: null,
+            collar: null,
+            left: null
+        };
+        let modelMetadata = {};
+
+        const API_BASE = 'http://127.0.0.1:8000';
+        const DESIGN_ID = 189;
         
-        // Initialize Three.js scene
-        function initScene() {
-            const canvas = document.getElementById('glb-viewer');
-            
+        // Model identification keywords
+        const MODEL_KEYWORDS = {
+            front: ['front'],
+            top: ['top'],
+            right: ['right', 'rigth'],
+            collar: ['collar'],
+            left: ['left']
+        };
+
+        init();
+        animate();
+        fetchDesignData();
+
+        function init() {
+            const container = document.getElementById('container');
+
             // Scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a1a);
+            scene.background = new THREE.Color(0x2a2a2a);
             
-            // Camera
-            camera = new THREE.PerspectiveCamera(
-                45,
-                canvas.clientWidth / canvas.clientHeight,
-                0.1,
-                1000
-            );
-            camera.position.set(5, 5, 5);
-            
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ 
-                canvas: canvas,
-                antialias: true 
-            });
-            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            
-            // Lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 10, 5);
-            scene.add(directionalLight);
-            
+
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
+            dirLight1.position.set(5, 10, 7.5);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+            dirLight2.position.set(-5, 5, -5);
+            scene.add(dirLight2);
+
+            const dirLight3 = new THREE.DirectionalLight(0xffffff, 0.3);
+            dirLight3.position.set(0, -5, 0);
+            scene.add(dirLight3);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(6, 4, 8);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            container.appendChild(renderer.domElement);
+
             // Controls
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
+            controls.minDistance = 2;
+            controls.maxDistance = 20;
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        async function fetchDesignData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/designs/${DESIGN_ID}/`);
+                if (!response.ok) throw new Error('Failed to fetch design');
+                
+                const data = await response.json();
+                document.getElementById('design-title').textContent = data.title || 'WMSS SINGLE SKIN 1 SEC';
+                
+                let files = [];
+                if (data.glb_files && data.glb_files.length > 0) {
+                    data.glb_files.forEach(f => {
+                        files.push({
+                            name: f.file_name || `Part ${f.id}`,
+                            fileName: f.file_name || '',
+                            url: f.file,
+                            type: f.file_type
+                        });
+                    });
+                }
+                
+                if (files.length > 0) {
+                    await loadAllModels(files);
+                } else {
+                    document.getElementById('loader').textContent = "No models found";
+                }
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('design-title').textContent = "Error loading design";
+                document.getElementById('loader').textContent = "Failed to load";
+            }
+        }
+
+        async function loadAllModels(files) {
+            const loader = new GLTFLoader();
+            let loadedCount = 0;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                let url = file.url;
+                
+                if (!url.startsWith('http')) {
+                    if (!url.startsWith('/')) url = '/' + url;
+                    url = API_BASE + url;
+                }
+
+                try {
+                    const gltf = await loadGLTF(loader, url);
+                    const model = gltf.scene;
+                    
+                    // Identify which model this is
+                    const modelKey = identifyModel(file.fileName, file.name);
+                    
+                    if (modelKey && !models[modelKey]) {
+                        models[modelKey] = model;
+                        scene.add(model);
+                        
+                        // Store metadata
+                        modelMetadata[modelKey] = {
+                            fileName: file.fileName,
+                            name: file.name,
+                            originalPosition: { x: 0, y: 0, z: 0 },
+                            originalRotation: { x: 0, y: 0, z: 0 },
+                            originalScale: { x: 1, y: 1, z: 1 },
+                            currentRotation: { x: 0, y: 0, z: 0 }
+                        };
+                        
+                        enableControls(modelKey);
+                        document.getElementById(`status-${modelKey}`).textContent = 'Loaded';
+                        document.getElementById(`status-${modelKey}`).classList.add('loaded');
+                        
+                        console.log(`Loaded ${modelKey}:`, file.name);
+                    }
+                    
+                    loadedCount++;
+                    document.getElementById('loader').textContent = `Loading ${loadedCount}/${files.length}...`;
+                    
+                } catch (error) {
+                    console.error(`Failed to load ${file.name}:`, error);
+                }
+            }
+
+            if (loadedCount > 0) {
+                centerAndScaleModels();
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('controls-panel').style.display = 'block';
+            }
+        }
+
+        function loadGLTF(loader, url) {
+            return new Promise((resolve, reject) => {
+                loader.load(url, resolve, undefined, reject);
+            });
+        }
+
+        function identifyModel(fileName, partName) {
+            const searchText = (fileName + ' ' + partName).toLowerCase();
             
-            // Grid helper
-            const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
-            scene.add(gridHelper);
+            for (const [key, keywords] of Object.entries(MODEL_KEYWORDS)) {
+                if (keywords.some(keyword => searchText.includes(keyword))) {
+                    return key;
+                }
+            }
+            return null;
+        }
+
+        function centerAndScaleModels() {
+            const allModels = Object.values(models).filter(m => m !== null);
+            if (allModels.length === 0) return;
+
+            const box = new THREE.Box3();
+            allModels.forEach(model => box.expandByObject(model));
+
+            const size = box.getSize(new THREE.Vector3()).length();
+            const center = box.getCenter(new THREE.Vector3());
+
+            allModels.forEach(model => {
+                model.position.x -= center.x;
+                model.position.y -= center.y;
+                model.position.z -= center.z;
+            });
+
+            const targetSize = 6;
+            if (size > 0) {
+                const scale = targetSize / size;
+                allModels.forEach(model => {
+                    model.scale.setScalar(scale);
+                });
+            }
             
-            // Axes helper
-            const axesHelper = new THREE.AxesHelper(5);
-            scene.add(axesHelper);
+            // Update metadata with actual positions
+            Object.keys(models).forEach(key => {
+                if (models[key] && modelMetadata[key]) {
+                    const m = models[key];
+                    modelMetadata[key].originalPosition = { x: m.position.x, y: m.position.y, z: m.position.z };
+                    modelMetadata[key].originalScale = { x: m.scale.x, y: m.scale.y, z: m.scale.z };
+                    updateDisplayValues(key);
+                }
+            });
+
+            camera.lookAt(0, 0, 0);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+
+        function enableControls(modelKey) {
+            // Enable all buttons and sliders for this model
+            const controls = ['rot-x-minus', 'rot-x-plus', 'rot-y-minus', 'rot-y-plus', 'rot-z-minus', 'rot-z-plus',
+                            'pos-x', 'pos-y', 'pos-z', 'scale-x', 'scale-y', 'scale-z', 'reset'];
             
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                camera.aspect = canvas.clientWidth / canvas.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            controls.forEach(ctrl => {
+                const elem = document.getElementById(`${ctrl}-${modelKey}`);
+                if (elem) elem.disabled = false;
+            });
+        }
+
+        window.toggleSection = function(modelKey) {
+            const section = document.getElementById(`section-${modelKey}`);
+            section.classList.toggle('collapsed');
+        };
+
+        window.rotateModel = function(modelKey, axis, degrees) {
+            const model = models[modelKey];
+            if (!model) return;
+            
+            const radians = (degrees * Math.PI) / 180;
+            const startRot = model.rotation[axis];
+            const endRot = startRot + radians;
+            
+            animateValue(startRot, endRot, 300, (value) => {
+                model.rotation[axis] = value;
+            }, () => {
+                modelMetadata[modelKey].currentRotation[axis] += degrees;
+                updateRotationDisplay(modelKey, axis);
+            });
+        };
+
+        window.updatePosition = function(modelKey, axis, value) {
+            const model = models[modelKey];
+            if (!model) return;
+            
+            const numValue = parseFloat(value);
+            const startPos = model.position[axis];
+            const offset = numValue - (model.position[axis] - modelMetadata[modelKey].originalPosition[axis]);
+            const endPos = modelMetadata[modelKey].originalPosition[axis] + numValue;
+            
+            animateValue(startPos, endPos, 200, (val) => {
+                model.position[axis] = val;
             });
             
-            // Animation loop
+            document.getElementById(`pos-${axis}-val-${modelKey}`).textContent = numValue.toFixed(2);
+        };
+
+        window.updateScale = function(modelKey, axis, value) {
+            const model = models[modelKey];
+            if (!model) return;
+            
+            const numValue = parseFloat(value);
+            const startScale = model.scale[axis];
+            const baseScale = modelMetadata[modelKey].originalScale[axis];
+            const endScale = baseScale * numValue;
+            
+            animateValue(startScale, endScale, 200, (val) => {
+                model.scale[axis] = val;
+            });
+            
+            document.getElementById(`scale-${axis}-val-${modelKey}`).textContent = numValue.toFixed(2);
+        };
+
+        window.resetModel = function(modelKey) {
+            const model = models[modelKey];
+            const meta = modelMetadata[modelKey];
+            if (!model || !meta) return;
+            
+            // Reset rotation
+            ['x', 'y', 'z'].forEach(axis => {
+                animateValue(model.rotation[axis], meta.originalRotation[axis], 500, (val) => {
+                    model.rotation[axis] = val;
+                });
+                meta.currentRotation[axis] = 0;
+            });
+            
+            // Reset position
+            ['x', 'y', 'z'].forEach(axis => {
+                animateValue(model.position[axis], meta.originalPosition[axis], 500, (val) => {
+                    model.position[axis] = val;
+                });
+            });
+            
+            // Reset scale
+            ['x', 'y', 'z'].forEach(axis => {
+                animateValue(model.scale[axis], meta.originalScale[axis], 500, (val) => {
+                    model.scale[axis] = val;
+                });
+            });
+            
+            setTimeout(() => updateDisplayValues(modelKey), 500);
+        };
+
+        function animateValue(start, end, duration, updateFn, completeFn) {
+            const startTime = Date.now();
+            
             function animate() {
-                requestAnimationFrame(animate);
-                controls.update();
-                renderer.render(scene, camera);
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                
+                updateFn(start + (end - start) * eased);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else if (completeFn) {
+                    completeFn();
+                }
             }
+            
             animate();
         }
-        
-        // Load GLB file
-        function loadGLB(file) {
-            const loadingEl = document.getElementById('loading');
-            const errorEl = document.getElementById('error');
-            const infoEl = document.getElementById('info');
-            
-            loadingEl.style.display = 'block';
-            errorEl.style.display = 'none';
-            infoEl.style.display = 'none';
-            
-            // Remove previous model
-            if (model) {
-                scene.remove(model);
-                // Dispose of geometry and materials
-                model.traverse((child) => {
-                    if (child.isMesh) {
-                        child.geometry.dispose();
-                        if (child.material) {
-                            if (Array.isArray(child.material)) {
-                                child.material.forEach(material => material.dispose());
-                            } else {
-                                child.material.dispose();
-                            }
-                        }
-                    }
-                });
-            }
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const loader = new THREE.GLTFLoader();
-                const arrayBuffer = e.target.result;
-                
-                loader.parse(arrayBuffer, '', (gltf) => {
-                    model = gltf.scene;
-                    
-                    // Calculate bounding box and center the model
-                    const box = new THREE.Box3().setFromObject(model);
-                    const center = box.getCenter(new THREE.Vector3());
-                    const size = box.getSize(new THREE.Vector3());
-                    
-                    // Center the model
-                    model.position.sub(center);
-                    
-                    // Scale camera to fit model
-                    const maxDim = Math.max(size.x, size.y, size.z);
-                    const distance = maxDim * 2;
-                    camera.position.set(distance, distance, distance);
-                    camera.lookAt(0, 0, 0);
-                    controls.target.set(0, 0, 0);
-                    controls.update();
-                    
-                    scene.add(model);
-                    loadingEl.style.display = 'none';
-                    infoEl.style.display = 'block';
-                }, (error) => {
-                    console.error('Error loading GLB:', error);
-                    loadingEl.style.display = 'none';
-                    errorEl.style.display = 'block';
-                    errorEl.textContent = `Error loading GLB file: ${error.message || 'Unknown error'}`;
-                });
-            };
-            
-            reader.onerror = () => {
-                loadingEl.style.display = 'none';
-                errorEl.style.display = 'block';
-                errorEl.textContent = 'Error reading file';
-            };
-            
-            reader.readAsArrayBuffer(file);
+
+        function updateRotationDisplay(modelKey, axis) {
+            const degrees = modelMetadata[modelKey].currentRotation[axis];
+            document.getElementById(`rot-${axis}-val-${modelKey}`).textContent = `${Math.round(degrees)}°`;
         }
-        
-        // File input handler
-        document.getElementById('file-input').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('file-name').textContent = file.name;
-                loadGLB(file);
-            }
-        });
-        
-        // Initialize scene
-        initScene();
-        
-        // Allow drag and drop
-        const viewerContainer = document.querySelector('.viewer-container');
-        
-        viewerContainer.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-        
-        viewerContainer.addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+
+        function updateDisplayValues(modelKey) {
+            const model = models[modelKey];
+            const meta = modelMetadata[modelKey];
+            if (!model || !meta) return;
             
-            const file = e.dataTransfer.files[0];
-            if (file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
-                document.getElementById('file-name').textContent = file.name;
-                loadGLB(file);
-            } else {
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('error').textContent = 'Please drop a .glb or .gltf file';
-            }
-        });
+            // Update rotation displays
+            ['x', 'y', 'z'].forEach(axis => {
+                document.getElementById(`rot-${axis}-val-${modelKey}`).textContent = `${Math.round(meta.currentRotation[axis])}°`;
+            });
+            
+            // Update position displays and sliders
+            ['x', 'y', 'z'].forEach(axis => {
+                const offset = model.position[axis] - meta.originalPosition[axis];
+                document.getElementById(`pos-${axis}-${modelKey}`).value = offset.toFixed(1);
+                document.getElementById(`pos-${axis}-val-${modelKey}`).textContent = offset.toFixed(2);
+            });
+            
+            // Update scale displays and sliders
+            ['x', 'y', 'z'].forEach(axis => {
+                const scaleRatio = model.scale[axis] / meta.originalScale[axis];
+                document.getElementById(`scale-${axis}-${modelKey}`).value = scaleRatio.toFixed(1);
+                document.getElementById(`scale-${axis}-val-${modelKey}`).textContent = scaleRatio.toFixed(2);
+            });
+        }
     </script>
 </body>
 </html>
+
 

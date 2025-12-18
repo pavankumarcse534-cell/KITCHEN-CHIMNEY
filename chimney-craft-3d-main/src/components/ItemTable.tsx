@@ -24,6 +24,7 @@ interface Item {
   cmhCfm: string;
   collarStaticPressure: string;
   freshAirQty: string;
+  freshAirCollarQty: string;
   frontPanelThickness: string;
   skinType: string;
   make: string;
@@ -55,6 +56,7 @@ export const ItemTable = ({ items, setItems }: ItemTableProps) => {
       cmhCfm: '',
       collarStaticPressure: '',
       freshAirQty: '',
+      freshAirCollarQty: '',
       frontPanelThickness: '',
       skinType: '',
       make: '',
@@ -139,24 +141,50 @@ export const ItemTable = ({ items, setItems }: ItemTableProps) => {
                   </Select>
                 </div>
                 <div className="space-y-2 flex flex-col h-full">
-                  <Label className="text-xs text-muted-foreground">LENGTH</Label>
-                <Input
-                  type="number"
-                    placeholder="LENGTH"
-                  value={item.length}
-                  onChange={(e) => updateItem(item.id, 'length', e.target.value)}
-                    className="h-10"
-                />
+                  <Label className="text-xs text-muted-foreground">LENGTH (MM)</Label>
+                  <Select
+                    value={item.length}
+                    onValueChange={(value) => updateItem(item.id, 'length', value)}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="PICK LENGTH" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="300">300 MM</SelectItem>
+                      <SelectItem value="400">400 MM</SelectItem>
+                      <SelectItem value="500">500 MM</SelectItem>
+                      <SelectItem value="600">600 MM</SelectItem>
+                      <SelectItem value="700">700 MM</SelectItem>
+                      <SelectItem value="800">800 MM</SelectItem>
+                      <SelectItem value="900">900 MM</SelectItem>
+                      <SelectItem value="1000">1000 MM</SelectItem>
+                      <SelectItem value="1200">1200 MM</SelectItem>
+                      <SelectItem value="1500">1500 MM</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2 flex flex-col h-full">
-                  <Label className="text-xs text-muted-foreground">WIDTH</Label>
-                <Input
-                  type="number"
-                    placeholder="WIDTH"
-                  value={item.width}
-                  onChange={(e) => updateItem(item.id, 'width', e.target.value)}
-                    className="h-10"
-                />
+                  <Label className="text-xs text-muted-foreground">WIDTH (MM)</Label>
+                  <Select
+                    value={item.width}
+                    onValueChange={(value) => updateItem(item.id, 'width', value)}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="PICK WIDTH" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="200">200 MM</SelectItem>
+                      <SelectItem value="250">250 MM</SelectItem>
+                      <SelectItem value="300">300 MM</SelectItem>
+                      <SelectItem value="350">350 MM</SelectItem>
+                      <SelectItem value="400">400 MM</SelectItem>
+                      <SelectItem value="450">450 MM</SelectItem>
+                      <SelectItem value="500">500 MM</SelectItem>
+                      <SelectItem value="600">600 MM</SelectItem>
+                      <SelectItem value="700">700 MM</SelectItem>
+                      <SelectItem value="800">800 MM</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2 flex flex-col h-full">
                   <Label className="text-xs text-muted-foreground">HEIGHT (MM)</Label>
@@ -168,10 +196,18 @@ export const ItemTable = ({ items, setItems }: ItemTableProps) => {
                       <SelectValue placeholder="PICK HEIGHT" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="200">200 MM</SelectItem>
                       <SelectItem value="250">250 MM</SelectItem>
                       <SelectItem value="300">300 MM</SelectItem>
+                      <SelectItem value="350">350 MM</SelectItem>
                       <SelectItem value="380">380 MM</SelectItem>
+                      <SelectItem value="400">400 MM</SelectItem>
+                      <SelectItem value="450">450 MM</SelectItem>
+                      <SelectItem value="500">500 MM</SelectItem>
                       <SelectItem value="550">550 MM</SelectItem>
+                      <SelectItem value="600">600 MM</SelectItem>
+                      <SelectItem value="700">700 MM</SelectItem>
+                      <SelectItem value="800">800 MM</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -268,22 +304,22 @@ export const ItemTable = ({ items, setItems }: ItemTableProps) => {
                 <div className="space-y-2 flex flex-col h-full">
                   <Label className="text-xs text-muted-foreground">CMH/CFM/COLLAR</Label>
                 <Input
-                  type="number"
-                  placeholder="CMH/CFM/COLLAR"
+                  type="text"
+                    placeholder="Enter numerical value or N/A"
                   value={item.cmhCfm}
                   onChange={(e) => updateItem(item.id, 'cmhCfm', e.target.value)}
                     className="h-10"
                 />
                 </div>
                 <div className="space-y-2 flex flex-col h-full">
-                  <Label className="text-xs text-muted-foreground">COLLAR STATIC PRESSURE</Label>
-                <Input
-                  type="number"
-                    placeholder="COLLAR STATIC PRESSURE"
-                  value={item.collarStaticPressure}
-                  onChange={(e) => updateItem(item.id, 'collarStaticPressure', e.target.value)}
+                  <Label className="text-xs text-muted-foreground">STATIC PRESSURE AT COLLAR</Label>
+                  <Input
+                    type="text"
+                    placeholder="Enter numerical value or N/A"
+                    value={item.collarStaticPressure}
+                    onChange={(e) => updateItem(item.id, 'collarStaticPressure', e.target.value)}
                     className="h-10"
-                />
+                  />
                 </div>
                 <div className="space-y-2 flex flex-col h-full">
                   <Label className="text-xs text-muted-foreground">FRESH AIR COLLAR DIM</Label>
@@ -296,8 +332,33 @@ export const ItemTable = ({ items, setItems }: ItemTableProps) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="150*150">150*150</SelectItem>
+                      <SelectItem value="200*150">200*150</SelectItem>
+                      <SelectItem value="200*200">200*200</SelectItem>
+                      <SelectItem value="250*200">250*200</SelectItem>
+                      <SelectItem value="300*200">300*200</SelectItem>
+                      <SelectItem value="330*200">330*200</SelectItem>
                       <SelectItem value="350*200">350*200</SelectItem>
+                      <SelectItem value="380*200">380*200</SelectItem>
+                      <SelectItem value="400*200">400*200</SelectItem>
+                      <SelectItem value="430*200">430*200</SelectItem>
+                      <SelectItem value="480*200">480*200</SelectItem>
                       <SelectItem value="500*200">500*200</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 flex flex-col h-full">
+                  <Label className="text-xs text-muted-foreground">FRESH AIR COLLAR QTY</Label>
+                  <Select
+                    value={item.freshAirCollarQty}
+                    onValueChange={(value) => updateItem(item.id, 'freshAirCollarQty', value)}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="PICK QUANTITY" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="N/A">N/A</SelectItem>
+                      <SelectItem value="1">1</SelectItem>
+                      <SelectItem value="2">2</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -356,6 +417,7 @@ export const ItemTable = ({ items, setItems }: ItemTableProps) => {
                       <SelectValue placeholder="SELECT CUTOUT" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="N/A">N/A</SelectItem>
                       <SelectItem value="610">610</SelectItem>
                       <SelectItem value="842">842</SelectItem>
                       <SelectItem value="1200">1200</SelectItem>

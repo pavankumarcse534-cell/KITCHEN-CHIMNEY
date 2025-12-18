@@ -34,6 +34,17 @@ class ChimneyDesign(models.Model):
     height = models.FloatField(default=0.0, help_text="Height in meters")
     depth = models.FloatField(default=0.0, help_text="Depth in meters")
     
+    # 3D Transformation data (for frontend preview)
+    position_x = models.FloatField(default=0.0, help_text="X position")
+    position_y = models.FloatField(default=0.0, help_text="Y position")
+    position_z = models.FloatField(default=0.0, help_text="Z position")
+    rotation_x = models.FloatField(default=0.0, help_text="X rotation in degrees")
+    rotation_y = models.FloatField(default=0.0, help_text="Y rotation in degrees")
+    rotation_z = models.FloatField(default=0.0, help_text="Z rotation in degrees")
+    scale_x = models.FloatField(default=1.0, help_text="X scale")
+    scale_y = models.FloatField(default=1.0, help_text="Y scale")
+    scale_z = models.FloatField(default=1.0, help_text="Z scale")
+    
     # Material properties
     material_type = models.CharField(max_length=100, blank=True)
     color = models.CharField(max_length=50, blank=True)
@@ -165,4 +176,29 @@ class ContactMessage(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.subject}"
+
+
+class DesignGLBFile(models.Model):
+    """Model to store multiple GLB files for a design"""
+    FILE_TYPE_CHOICES = [
+        ('model', 'Model File'),
+        ('original', 'Original File'),
+    ]
+    
+    design = models.ForeignKey(ChimneyDesign, on_delete=models.CASCADE, related_name='glb_files')
+    file = models.FileField(upload_to='models/', help_text="GLB or GLTF file")
+    file_type = models.CharField(max_length=20, choices=FILE_TYPE_CHOICES, default='model', help_text="Type of file (model or original)")
+    file_name = models.CharField(max_length=255, blank=True, help_text="Original filename")
+    is_primary = models.BooleanField(default=False, help_text="Primary file to use for 3D viewer")
+    order = models.IntegerField(default=0, help_text="Display order")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['order', '-created_at']
+        verbose_name = 'Design GLB File'
+        verbose_name_plural = 'Design GLB Files'
+    
+    def __str__(self):
+        return f"{self.design.title} - {self.file_name or self.file.name} ({self.file_type})"
 

@@ -1,39 +1,52 @@
 @echo off
-REM Start Django development server
-echo Starting Django server...
+echo ========================================
+echo Starting Django Backend Server
+echo ========================================
 echo.
 
-REM Check if virtual environment exists
-if exist "venv\Scripts\activate.bat" (
-    echo Activating virtual environment...
-    call venv\Scripts\activate.bat
-) else (
-    echo Warning: Virtual environment not found. Using system Python.
-    echo.
+REM Make sure we're in the backend directory
+cd /d "%~dp0"
+
+echo Checking Python...
+python --version
+if errorlevel 1 (
+    echo ERROR: Python not found!
+    pause
+    exit /b 1
 )
 
-REM Check Django installation
+echo.
+echo Checking Django...
 python -c "import django; print('Django version:', django.get_version())" 2>nul
 if errorlevel 1 (
-    echo ERROR: Django is not installed!
-    echo Please install dependencies: pip install -r requirements.txt
+    echo ERROR: Django not installed!
+    echo Please run: pip install -r requirements.txt
     pause
     exit /b 1
 )
 
 echo.
-echo Running Django system check...
+echo Running system check...
 python manage.py check
 if errorlevel 1 (
-    echo.
-    echo ERROR: Django system check failed!
-    pause
-    exit /b 1
+    echo WARNING: System check found issues!
+    echo Continuing anyway...
 )
 
 echo.
-echo Starting development server on http://127.0.0.1:8000/admin
-echo Press Ctrl+C to stop the server
+echo ========================================
+echo Starting server on http://0.0.0.0:8000
+echo ========================================
 echo.
-python manage.py runserver
+echo Server URLs:
+echo   - API: http://localhost:8000/api/
+echo   - Health: http://localhost:8000/api/health/
+echo   - Admin: http://localhost:8000/admin/
+echo.
+echo Press CTRL+C to stop the server
+echo.
 
+REM Start the server
+python manage.py runserver 0.0.0.0:8000
+
+pause

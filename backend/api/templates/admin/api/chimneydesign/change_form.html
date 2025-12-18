@@ -1,0 +1,97 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Custom styling for multiple file input */
+    input[type="file"].multiple-file-input::file-selector-button {
+        content: "Choose Files";
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    
+    input[type="file"].multiple-file-input::file-selector-button:hover {
+        background-color: #0056b3;
+    }
+    
+    input[type="file"].multiple-file-input {
+        padding: 8px;
+        border: 2px dashed #ccc;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+        cursor: pointer;
+        width: 100%;
+    }
+    
+    input[type="file"].multiple-file-input:hover {
+        border-color: #007bff;
+        background-color: #f0f7ff;
+    }
+    
+    /* Help text styling */
+    .multiple-file-input + .help,
+    .multiple-file-input ~ .help {
+        display: block;
+        margin-top: 5px;
+        color: #666;
+        font-size: 12px;
+    }
+</style>
+<script>
+(function($) {
+    'use strict';
+    
+    $(document).ready(function() {
+        // Update file input button text and add help text for all multiple file inputs
+        $('.multiple-file-input').each(function() {
+            var $input = $(this);
+            var fieldName = $input.attr('name');
+            var isLegacy = fieldName === 'original_file' || fieldName === 'model_file';
+            
+            // Add help text after input
+            if (!$input.next('.help-text').length) {
+                var helpText = isLegacy 
+                    ? '💡 Click "Choose Files" to select multiple files (Legacy field - use GLB Files section instead)'
+                    : '💡 Click "Choose Files" to select multiple GLB files at once (Hold Ctrl/Cmd and click)';
+                
+                $input.after(
+                    '<small class="help-text" style="display: block; margin-top: 5px; color: #666;">' +
+                    helpText +
+                    '</small>'
+                );
+            }
+            
+            // Update on file selection
+            $input.on('change', function() {
+                var files = this.files;
+                var $help = $input.next('.help-text');
+                
+                if (files.length > 1) {
+                    $help.html('✅ Selected <strong>' + files.length + ' files</strong>: ' + 
+                              Array.from(files).slice(0, 3).map(f => f.name).join(', ') +
+                              (files.length > 3 ? ' and ' + (files.length - 3) + ' more...' : ''));
+                    $help.css('color', 'green');
+                } else if (files.length === 1) {
+                    $help.html('✅ Selected: <strong>' + files[0].name + '</strong>');
+                    $help.css('color', 'green');
+                } else {
+                    var defaultText = isLegacy 
+                        ? '💡 Click "Choose Files" to select multiple files (Legacy field - use GLB Files section instead)'
+                        : '💡 Click "Choose Files" to select multiple GLB files at once (Hold Ctrl/Cmd and click)';
+                    $help.html(defaultText);
+                    $help.css('color', '#666');
+                }
+            });
+        });
+    });
+})(django.jQuery);
+</script>
+{% endblock %}
+

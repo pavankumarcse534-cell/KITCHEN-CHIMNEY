@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test script to verify all 8 model types are configured correctly
+Test script to verify all model types are configured correctly
 """
 import os
 import django
@@ -16,13 +16,14 @@ from api.models import ChimneyDesign
 from django.conf import settings
 import os
 
+total_types = len(MODEL_TYPE_MAPPING)
 print("=" * 60)
-print("Testing 8 Model Types Configuration")
+print(f"Testing {total_types} Model Types Configuration")
 print("=" * 60)
 print()
 
-# Ensure all 8 model types exist
-print("1. Ensuring all 8 model types exist in database...")
+# Ensure all model types exist
+print(f"1. Ensuring all {total_types} model types exist in database...")
 result = ensure_model_type_designs()
 print(f"   ✅ Processed {len(result)} model types")
 for r in result:
@@ -66,9 +67,9 @@ for model_type, title in MODEL_TYPE_MAPPING.items():
 
 print("=" * 60)
 if all_ok:
-    print("✅ All 8 model types are configured correctly!")
+    print(f"✅ All {total_types} model types are configured correctly!")
 else:
-    print("⚠️  Some model types are missing GLB files.")
+    print(f"⚠️  Some model types are missing GLB files.")
     print("   Upload GLB files via Django admin: http://localhost:8000/admin/")
 print("=" * 60)
 

@@ -1,30 +1,62 @@
-import { Card } from "@/components/ui/card";
+﻿import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface ProjectFormProps {
-  projectData: any;
-  setProjectData: (data: any) => void;
+interface ProjectData {
+  projectName: string;
+  clientName: string;
+  customerCode: string;
+  date: string;
+  location: string;
+  drawingType: string;
+  sheetType: string;
+  modelType: string;
+  dimSection1: string;
+  dimSection2: string;
+  dimSection3: string;
+  dimSection4: string;
+  dimSection5: string;
+  length: string;
+  width: string;
+  height: string;
 }
 
-export const ProjectForm = ({ projectData, setProjectData }: ProjectFormProps) => {
-  const handleInputChange = (field: string, value: string) => {
-    setProjectData({ ...projectData, [field]: value });
+interface ProjectFormProps {
+  projectData: ProjectData;
+  setProjectData: (data: ProjectData | ((prev: ProjectData) => ProjectData)) => void;
+  modelTypes?: Array<{
+    model_type: string;
+    title: string;
+    preview_url?: string;
+    glb_url?: string;
+    has_model?: boolean;
+    has_preview?: boolean;
+  }>;
+}
+
+export const ProjectForm = ({ projectData, setProjectData, modelTypes = [] }: ProjectFormProps) => {
+  const updateField = (field: keyof ProjectData, value: string) => {
+    setProjectData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   return (
-    <Card className="p-6 space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground mb-6">Project Information</h2>
-        
+    <Card>
+      <CardHeader>
+        <CardTitle>Project Information</CardTitle>
+        <CardDescription>Enter project details and specifications</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="projectName">Project Name</Label>
             <Input
               id="projectName"
               value={projectData.projectName}
-              onChange={(e) => handleInputChange('projectName', e.target.value)}
+              onChange={(e) => updateField('projectName', e.target.value)}
               placeholder="Enter project name"
             />
           </div>
@@ -34,17 +66,17 @@ export const ProjectForm = ({ projectData, setProjectData }: ProjectFormProps) =
             <Input
               id="clientName"
               value={projectData.clientName}
-              onChange={(e) => handleInputChange('clientName', e.target.value)}
+              onChange={(e) => updateField('clientName', e.target.value)}
               placeholder="Enter client name"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="customerCode">D-Customer Code</Label>
+            <Label htmlFor="customerCode">Customer Code</Label>
             <Input
               id="customerCode"
               value={projectData.customerCode}
-              onChange={(e) => handleInputChange('customerCode', e.target.value)}
+              onChange={(e) => updateField('customerCode', e.target.value)}
               placeholder="Enter customer code"
             />
           </div>
@@ -55,7 +87,7 @@ export const ProjectForm = ({ projectData, setProjectData }: ProjectFormProps) =
               id="date"
               type="date"
               value={projectData.date}
-              onChange={(e) => handleInputChange('date', e.target.value)}
+              onChange={(e) => updateField('date', e.target.value)}
             />
           </div>
 
@@ -64,8 +96,8 @@ export const ProjectForm = ({ projectData, setProjectData }: ProjectFormProps) =
             <Input
               id="location"
               value={projectData.location}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-              placeholder="Installation site"
+              onChange={(e) => updateField('location', e.target.value)}
+              placeholder="Enter location"
             />
           </div>
 
@@ -73,77 +105,129 @@ export const ProjectForm = ({ projectData, setProjectData }: ProjectFormProps) =
             <Label htmlFor="drawingType">Drawing Type</Label>
             <Select
               value={projectData.drawingType}
-              onValueChange={(value) => handleInputChange('drawingType', value)}
+              onValueChange={(value) => updateField('drawingType', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="drawingType">
                 <SelectValue placeholder="Select drawing type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="shop">Shop Drawing</SelectItem>
-                <SelectItem value="production">Production Drawing</SelectItem>
+                <SelectItem value="shop_dwg">Shop DWG</SelectItem>
+                <SelectItem value="production_dwg">Production DWG</SelectItem>
                 <SelectItem value="both">Both</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sheetType">Sheet Material</Label>
+            <Label htmlFor="sheetType">Sheet Type</Label>
             <Select
               value={projectData.sheetType}
-              onValueChange={(value) => handleInputChange('sheetType', value)}
+              onValueChange={(value) => updateField('sheetType', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="sheetType">
                 <SelectValue placeholder="Select sheet type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="202">Sheet 202</SelectItem>
-                <SelectItem value="304">Sheet 304</SelectItem>
+                <SelectItem value="sheet_202">Sheet 202</SelectItem>
+                <SelectItem value="sheet_304">Sheet 304</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="modelType">3D Model Type</Label>
+            <Label htmlFor="modelType">Model Type</Label>
             <Select
-              value={projectData.modelType || ''}
-              onValueChange={(value) => handleInputChange('modelType', value)}
+              value={projectData.modelType}
+              onValueChange={(value) => updateField('modelType', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="modelType">
                 <SelectValue placeholder="Select model type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="wall_mounted_skin">WALL MOUNTED SINGLE SKIN</SelectItem>
-                <SelectItem value="wall_mounted_single_plenum">WALL MOUNTED SINGLE PLENUM</SelectItem>
-                <SelectItem value="wall_mounted_double_skin">WALL-MOUNTED DOUBLE SKIN</SelectItem>
-                <SelectItem value="wall_mounted_compensating">WALL-MOUNTED COMPENSATING</SelectItem>
-                <SelectItem value="uv_compensating">UV COMPENSATING</SelectItem>
-                <SelectItem value="island_single_skin">ISLAND SINGLE SKIN</SelectItem>
-                <SelectItem value="island_double_skin">ISLAND DOUBLE SKIN</SelectItem>
-                <SelectItem value="island_compensating">ISLAND COMPENSATING</SelectItem>
+                {modelTypes.length > 0 ? (
+                  modelTypes
+                    .filter((modelType) => {
+                      // Filter out invalid model types
+                      if (!modelType.model_type || 
+                          modelType.model_type.trim() === '' || 
+                          !modelType.title || 
+                          modelType.title.trim() === '') {
+                        return false;
+                      }
+                      
+                      // Filter out unwanted model types
+                      const excludedTypes = ['wmss_single_skin_1_sec', 'one_collar_hole_single_skin', 'one_collar_single_skin'];
+                      if (excludedTypes.includes(modelType.model_type)) {
+                        return false;
+                      }
+                      
+                      return true;
+                    })
+                    .map((modelType) => (
+                      <SelectItem key={modelType.model_type} value={modelType.model_type}>
+                        {modelType.title}
+                      </SelectItem>
+                    ))
+                ) : (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading model types...</div>
+                )}
               </SelectContent>
             </Select>
           </div>
-
         </div>
-      </div>
 
-      <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">Dimensional Configuration</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {[1, 2, 3, 4, 5].map((section) => (
-            <div key={section} className="space-y-2">
-              <Label htmlFor={`dimSection${section}`}>Dim Section {section}</Label>
-              <Input
-                id={`dimSection${section}`}
-                type="number"
-                value={projectData[`dimSection${section}`] || ''}
-                onChange={(e) => handleInputChange(`dimSection${section}`, e.target.value)}
-                placeholder="0"
-              />
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 pt-4 border-t">
+          <div className="space-y-2">
+            <Label htmlFor="dimSection1">Dim Section 1</Label>
+            <Input
+              id="dimSection1"
+              value={projectData.dimSection1}
+              onChange={(e) => updateField('dimSection1', e.target.value)}
+              placeholder="Section 1"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dimSection2">Dim Section 2</Label>
+            <Input
+              id="dimSection2"
+              value={projectData.dimSection2}
+              onChange={(e) => updateField('dimSection2', e.target.value)}
+              placeholder="Section 2"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dimSection3">Dim Section 3</Label>
+            <Input
+              id="dimSection3"
+              value={projectData.dimSection3}
+              onChange={(e) => updateField('dimSection3', e.target.value)}
+              placeholder="Section 3"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dimSection4">Dim Section 4</Label>
+            <Input
+              id="dimSection4"
+              value={projectData.dimSection4}
+              onChange={(e) => updateField('dimSection4', e.target.value)}
+              placeholder="Section 4"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dimSection5">Dim Section 5</Label>
+            <Input
+              id="dimSection5"
+              value={projectData.dimSection5}
+              onChange={(e) => updateField('dimSection5', e.target.value)}
+              placeholder="Section 5"
+            />
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

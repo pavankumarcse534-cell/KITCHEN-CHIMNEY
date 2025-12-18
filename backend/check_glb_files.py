@@ -1,5 +1,5 @@
 """
-Script to check if GLB files are uploaded for all 8 model types
+Script to check if GLB files are uploaded for all model types
 Run: python manage.py shell < check_glb_files.py
 Or: python check_glb_files.py (if Django is configured)
 """
@@ -11,23 +11,16 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'chimney_craft_backend.settings'
 django.setup()
 
 from api.models import ChimneyDesign
+from api.admin_helpers import MODEL_TYPE_MAPPING, get_design_by_model_type
 from django.core.files.storage import default_storage
 from django.conf import settings
 
-# Model type mapping
-MODEL_TYPES = {
-    'wall_mounted_skin': 'Wall Mounted Single Skin',
-    'wall_mounted_single_plenum': 'Wall Mounted Single Plenum',
-    'wall_mounted_double_skin': 'Wall-Mounted Double Skin',
-    'wall_mounted_compensating': 'Wall-Mounted Compensating',
-    'uv_compensating': 'UV Compensating',
-    'island_single_skin': 'Island Single Skin',
-    'island_double_skin': 'Island Double Skin',
-    'island_compensating': 'Island Compensating',
-}
+# Use MODEL_TYPE_MAPPING from admin_helpers
+MODEL_TYPES = MODEL_TYPE_MAPPING
+total_types = len(MODEL_TYPES)
 
 print("=" * 60)
-print("Checking GLB Files for All 8 Model Types")
+print(f"Checking GLB Files for All {total_types} Model Types")
 print("=" * 60)
 print()
 
@@ -35,9 +28,7 @@ missing_files = []
 has_files = []
 
 for model_type, title in MODEL_TYPES.items():
-    design = ChimneyDesign.objects.filter(
-        title__iexact=title
-    ).filter(is_active=True).first()
+    design = get_design_by_model_type(model_type)
     
     if design:
         if design.model_file:

@@ -1,0 +1,31 @@
+# System
+.DS_Store
+Thumbs.db
+
+# Environments
+venv/
+env/
+.env
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Editor directories and files
+.idea/
+.vscode/
+
+# Build
+dist/
+build/

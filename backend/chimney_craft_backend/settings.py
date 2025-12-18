@@ -4,10 +4,14 @@ Django settings for chimney_craft_backend project.
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent  # Root of the entire project
+
+# Load environment variables from .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -130,7 +134,9 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Additional static files directories for frontend (only add if they exist)
-STATICFILES_DIRS = []
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'api', 'static'),
+]
 frontend_dist_assets = os.path.join(PROJECT_ROOT, 'chimney-craft-3d-main', 'dist', 'assets')
 frontend_public = os.path.join(PROJECT_ROOT, 'chimney-craft-3d-main', 'public')
 if os.path.exists(frontend_dist_assets):

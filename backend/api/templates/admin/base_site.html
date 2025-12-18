@@ -1,0 +1,57 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}Django Admin API Page{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    #header {
+        background: #417690;
+    }
+    #site-name {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+    }
+    .server-icon {
+        font-size: 28px;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+    }
+    .lovable-logo {
+        height: 28px;
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        object-fit: contain;
+    }
+    #site-name a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #f5dd5d;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    #site-name a:hover {
+        color: #ffc;
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <span class="server-icon" title="Backend Server">🖥️</span>
+        <img src="https://lovable.dev/favicon.svg" alt="Lovable" class="lovable-logo" title="Lovable" onerror="this.style.display='none';">
+        <span>Django Admin API Page</span>
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+

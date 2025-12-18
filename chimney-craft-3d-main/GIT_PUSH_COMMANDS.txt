@@ -1,0 +1,39 @@
+========================================
+Git Push Commands - Copy and Paste
+========================================
+
+Run these commands in PowerShell or Command Prompt:
+
+# Step 1: Pull remote changes (merge with local)
+git pull origin main --allow-unrelated-histories --no-edit
+
+# Step 2: Add all files
+git add .
+
+# Step 3: Commit changes
+git commit -m "Merge remote changes and add Kitchen Chimney 3D Model Management System frontend"
+
+# Step 4: Push to GitHub
+git push -u origin main
+
+========================================
+If Step 1 fails, try:
+========================================
+
+# Alternative: Force push (overwrites remote - use with caution)
+git push -u origin main --force
+
+WARNING: --force will overwrite any files on GitHub!
+
+========================================
+If you get merge conflicts:
+========================================
+
+# Accept all local changes
+git checkout --ours .
+git add .
+git commit -m "Merge: Keep local frontend code"
+git push -u origin main
+
+========================================
+

@@ -16,6 +16,10 @@ def serve_media_file(request, path):
     Serve media files with correct Content-Type headers
     Especially important for GLB files which are binary
     """
+    # URL decode the path to handle spaces and special characters
+    from urllib.parse import unquote
+    path = unquote(path)
+    
     file_path = os.path.join(settings.MEDIA_ROOT, path)
     
     # If file doesn't exist, try to find similar files (for GLB files with unique IDs)
@@ -25,15 +29,52 @@ def serve_media_file(request, path):
         dir_name = os.path.dirname(path)
         name_without_ext, file_ext = os.path.splitext(base_name)
         
+        # Try converting spaces to underscores (common issue)
+        name_with_underscores = name_without_ext.replace(' ', '_')
+        if name_with_underscores != name_without_ext:
+            # Try in same directory
+            alt_path = os.path.join(settings.MEDIA_ROOT, dir_name, name_with_underscores + file_ext) if dir_name else os.path.join(settings.MEDIA_ROOT, name_with_underscores + file_ext)
+            if os.path.exists(alt_path):
+                file_path = alt_path
+                logger.info(f"Found file with underscores: {file_path} (requested: {path})")
+            else:
+                # Try in models/original/ directory
+                alt_path_original = os.path.join(settings.MEDIA_ROOT, 'models', 'original', name_with_underscores + file_ext)
+                if os.path.exists(alt_path_original):
+                    file_path = alt_path_original
+                    logger.info(f"Found file with underscores in models/original/: {file_path} (requested: {path})")
+                else:
+                    # Try lowercase version
+                    name_lower = name_with_underscores.lower()
+                    alt_path_lower = os.path.join(settings.MEDIA_ROOT, dir_name, name_lower + file_ext) if dir_name else os.path.join(settings.MEDIA_ROOT, name_lower + file_ext)
+                    if os.path.exists(alt_path_lower):
+                        file_path = alt_path_lower
+                        logger.info(f"Found file with lowercase underscores: {file_path} (requested: {path})")
+                    else:
+                        # Try lowercase in models/original/
+                        alt_path_lower_original = os.path.join(settings.MEDIA_ROOT, 'models', 'original', name_lower + file_ext)
+                        if os.path.exists(alt_path_lower_original):
+                            file_path = alt_path_lower_original
+                            logger.info(f"Found file with lowercase underscores in models/original/: {file_path} (requested: {path})")
+        
+        # If still not found, continue with the existing search logic below
         # For GLB files, try to find files with similar names
-        if file_ext.lower() == '.glb':
+        if not os.path.exists(file_path) and file_ext.lower() == '.glb':
+            # Strategy 0: Try converting spaces to underscores in the search pattern
+            search_pattern = name_without_ext.replace(' ', '_')
+            
             # Strategy 1: Search for files starting with the base name (handles unique ID suffixes)
             # Example: WMSS_Single_Skin.glb -> WMSS_Single_Skin*.glb
             # Example: GA___Drawing_DS2__Date_201023041758_9UK1f2B.glb -> GA___Drawing_DS2__Date_201023041758*.glb
             
             # Try to extract base pattern (remove potential unique ID or version number)
-            parts = name_without_ext.split('_')
-            base_pattern = name_without_ext
+            # Use underscore version for pattern matching
+            parts = search_pattern.split('_')
+            base_pattern = search_pattern
+            
+            # Also try with original name (with spaces) for pattern matching
+            parts_with_spaces = name_without_ext.split(' ')
+            base_pattern_with_spaces = name_without_ext
             
             # Strategy: Find the longest common prefix that matches other files
             # For WMSS_Single_Skin_5Secs_2 -> try WMSS_Single_Skin_5Secs
@@ -89,6 +130,19 @@ def serve_media_file(request, path):
                 # Strategy 1: Try exact base pattern match (e.g., WMSS_Single_Skin_5Secs*.glb)
                 pattern = os.path.join(search_dir, f"{base_pattern}*{file_ext}")
                 matching_files = glob.glob(pattern)
+                
+                # Also try case-insensitive search (for Windows)
+                if not matching_files and os.path.exists(search_dir):
+                    import fnmatch
+                    all_files = os.listdir(search_dir)
+                    # Try case-insensitive matching
+                    matching_files = [os.path.join(search_dir, f) for f in all_files 
+                                    if fnmatch.fnmatch(f.lower(), f"{base_pattern.lower()}*{file_ext}")]
+                    
+                    # Also try matching with spaces converted to underscores
+                    if not matching_files:
+                        matching_files = [os.path.join(search_dir, f) for f in all_files 
+                                        if fnmatch.fnmatch(f.lower().replace(' ', '_'), f"{base_pattern.lower()}*{file_ext}")]
                 
                 if matching_files:
                     # Use the first matching file

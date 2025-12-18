@@ -19,6 +19,8 @@ from .main_views import (
     get_all_model_types,
     list_all_models,
     delete_model_by_type,
+    delete_glb_file,
+    delete_all_glb_files,
     convert_glb_to_dwg_view,
 )
 
@@ -43,6 +45,8 @@ __all__ = [
     'get_all_model_types',
     'list_all_models',
     'delete_model_by_type',
+    'delete_glb_file',
+    'delete_all_glb_files',
     'convert_glb_to_dwg_view',
 ]
 

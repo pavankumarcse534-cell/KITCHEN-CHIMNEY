@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from .models import Category, ChimneyDesign, UserProject, Order, ContactMessage
+from .models import DesignGLBFile, Category, ChimneyDesign, UserProject, Order, ContactMessage
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -39,9 +39,17 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'created_at']
 
 
+
+class DesignGLBFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DesignGLBFile
+        fields = ['id', 'file', 'file_type', 'file_name', 'is_primary', 'order']
+
+
 class ChimneyDesignSerializer(serializers.ModelSerializer):
     """Chimney Design serializer"""
     category_name = serializers.CharField(source='category.name', read_only=True)
+    glb_files = DesignGLBFileSerializer(many=True, read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     
     class Meta:
@@ -51,7 +59,8 @@ class ChimneyDesignSerializer(serializers.ModelSerializer):
             'model_file', 'model_data', 'width', 'height', 'depth',
             'material_type', 'color', 'price', 'thumbnail',
             'is_featured', 'is_active', 'created_by', 'created_by_username',
-            'created_at', 'updated_at'
+            'created_at', 'updated_at',
+            'glb_files'
         ]
         read_only_fields = ['created_by', 'created_at', 'updated_at']
 
@@ -59,6 +68,7 @@ class ChimneyDesignSerializer(serializers.ModelSerializer):
 class ChimneyDesignListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for design lists"""
     category_name = serializers.CharField(source='category.name', read_only=True)
+    glb_files = DesignGLBFileSerializer(many=True, read_only=True)
     
     class Meta:
         model = ChimneyDesign
@@ -106,4 +116,3 @@ class ContactMessageSerializer(serializers.ModelSerializer):
         model = ContactMessage
         fields = ['id', 'name', 'email', 'subject', 'message', 'is_read', 'created_at']
         read_only_fields = ['is_read', 'created_at']
-
